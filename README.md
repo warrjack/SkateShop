@@ -48,4 +48,4 @@ git clone https://github.com/warrjack/SkateShop.git
 
 ## Resources
 
-Visit my [website portfolio!](https://warrjack.weebly.com)
+Check out other work on my [website portfolio!](https://warrjack.weebly.com)
