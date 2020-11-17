@@ -6,7 +6,7 @@ public class Player1Controller : MonoBehaviour
 {
 
     //Self
-    private float movementSpeed = 600.0f;
+    private float movementSpeed = 1800.0f;
     private Rigidbody rbody;
     private GameObject selfGameObject;
 
