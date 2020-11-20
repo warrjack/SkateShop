@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player1Controller : MonoBehaviour
 {
-
+/*
     //Self
     private float movementSpeed = 1800.0f;
     private Rigidbody rbody;
@@ -306,6 +306,6 @@ public class Player1Controller : MonoBehaviour
     {
         child.transform.parent = tempTrans;
 
-    }
+    }*/
 }
 
