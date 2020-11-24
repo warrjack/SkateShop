@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -6,18 +7,19 @@ public class CustomerAI : MonoBehaviour
 {
     private NavMeshAgent agent;     //NavMeshAgent component
     public Vector3 destination;     //Next position to move to 
+    private bool isMoving = false;
 
     private List<Vector3> exitPoints = new List<Vector3>();             //Points declaring customer leaving scene
     private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
     public List<GameObject> tableList = new List<GameObject>();         //List of parents of clothing object points
     private List<GameObject> clothePoints = new List<GameObject>();     //List of clothing objects to determin next position
 
-    private int randomInt = 0;
-    private float stayInStoreChance = 0f;
-    private float pickUpChance = 0f;
-    private float messUpChance = 0f;
-    private float damageChance = 0f;
-    private float checkOutChance = 0f;
+    private int randomInt = 0;                  //Random number generated for chances of customer choosing something
+    private float stayInStoreChance = 0f;       //Chance % staying in the store
+    private float pickUpChance = 0f;            //Chance % in choosing picking up clothes
+    private float messUpChance = 0f;            //Chance % in choosing messing up clothes
+    private float damageChance = 0f;            //Chance % in choosing damaging clothes
+    private float checkOutChance = 0f;          //Chance % in choosing checking out clothes
     // Start is called before the first frame update
     void Start()
     {
@@ -40,10 +42,28 @@ public class CustomerAI : MonoBehaviour
         if (transform.position != destination)
         {
             agent.SetDestination(destination);
+            isMoving = true;
         }
         else
         {
+            isMoving = false;
             StartCoroutine(DelayBeforeNextMove());
+        }
+        Debug.Log("Is close as poss: " + CheckIfCloseAsPossible());
+    }
+
+    bool CheckIfCloseAsPossible()
+    {
+        if (isMoving && !agent.pathPending && !agent.hasPath)
+        {
+            Debug.Log("reached destination");
+            isMoving = false;
+            agent.ResetPath();
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 

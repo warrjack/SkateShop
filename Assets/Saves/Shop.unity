@@ -668,6 +668,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   destination: {x: 0, y: 0, z: 0}
+  tableList:
+  - {fileID: 1440334673}
+  - {fileID: 1324172595}
+  - {fileID: 801315575}
+  - {fileID: 1510442549}
+  - {fileID: 1528183440}
+  - {fileID: 1433615642}
+  - {fileID: 1055962204}
+  - {fileID: 654379970}
+  - {fileID: 824162068}
+  - {fileID: 1924280871}
 --- !u!195 &70570142
 NavMeshAgent:
   m_ObjectHideFlags: 0
