@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
     private float stackSpacer = 0.2f;                   //Space between stacked clothes
     private Vector3 clothesCarryingPosition = new Vector3(0f, 0f, 0.8f);    //Position clothes start when being stacked
 
+    private bool inputInUse = false;                    //Get controller input on down instance
+
 
     // Start is called before the first frame update
     void Start()
@@ -40,15 +42,17 @@ public class PlayerController : MonoBehaviour
         characterController.Move(moveDirection.normalized * playerSpeed * Time.deltaTime);
 
         //If any movement button is pressed, character will rotate towards movement direction, otherwise won't move
-        if(Input.GetKey(KeyCode.W) | Input.GetKey(KeyCode.A) | Input.GetKey(KeyCode.S) | Input.GetKey(KeyCode.D))
+        //if(Input.GetKey(KeyCode.W) | Input.GetKey(KeyCode.A) | Input.GetKey(KeyCode.S) | Input.GetKey(KeyCode.D))
+        if (moveDirection.x != 0 | moveDirection.y != 0)
         {
             //Rotate character from current rotation to movement direction at playerRotationSpeed rate
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveDirection), playerRotationSpeed);
         }
 
         //Interact Button
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetAxisRaw("Pick Up") != 0 && !inputInUse)
         {
+            inputInUse = true;
             //Cast ray from player center forward relative to player
             ray = new Ray(transform.position, transform.forward);
             //if ray hits point
@@ -66,8 +70,9 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        else if (Input.GetKeyDown(KeyCode.Q))
+        else if (Input.GetAxisRaw("Put Down") != 0 && !inputInUse)
         {
+            inputInUse = true;
             //Cast ray from player center forward relative to player
             ray = new Ray(transform.position, transform.forward);
             //if ray hits point
@@ -78,9 +83,30 @@ public class PlayerController : MonoBehaviour
                 if (rayHit.distance <= 1.1f)
                 {
                     //Handle dropping object with object passing object ray hit
-                    dropObject(rayHit.collider.gameObject);
+                    if (clothesCarrying.Count > 0)
+                    {
+                        dropObject(rayHit.collider.gameObject);
+                    }
                 }
             }
+        }
+
+        //Reset input use so buttons can be pressed again
+        if (Input.GetAxisRaw("Pick Up") == 0 && Input.GetAxisRaw("Put Down") == 0)
+        {
+            inputInUse = false;
+        }
+
+        //Check if sprinting
+        if (Input.GetAxisRaw("Speed Up") != 0)
+        {
+            //Sprint speed
+            playerSpeed = 10.0f;
+        }
+        else
+        {
+            //Walk speed (default)
+            playerSpeed = 7.0f;
         }
     }
 
@@ -109,19 +135,32 @@ public class PlayerController : MonoBehaviour
         {
             //Recognize most recent clothes object
             clothesObject = clothesCarrying[clothesCarrying.Count - 1];
-            Debug.Log(clothesObject.name.Substring(clothesObject.name.Length - 3) + ", " + collider.name.Substring(clothesObject.name.Length - 3));
             //Check if clothes are being placed in correct area (by checking last 3 letters of both placement object and clothes object
             if(clothesObject.name.Substring(clothesObject.name.Length - 3) == collider.name.Substring(collider.name.Length - 3))
             {
-                //Put clothes in same position as placement hitbox
-                clothesObject.transform.position = collider.transform.position;
-                //Set clothes collider to true, to be able to intereact with them again
-                clothesObject.GetComponent<BoxCollider>().enabled = true;
-                //Transfer clothes from player parent to placement parent
-                clothesObject.transform.SetParent(collider.transform);
-                //Remove clohtes from list of objects player is carrying 
-                clothesCarrying.Remove(clothesObject);
+                transferObjectParent(clothesObject, collider);
             }
         }
+
+        //If placing object down at folding station
+        else if (collider.name.Contains("FoldingStation"))
+        {
+            //Recognize most recent clothes object
+            clothesObject = clothesCarrying[clothesCarrying.Count - 1];
+            transferObjectParent(clothesObject, collider);
+        }
+    }
+
+    //Put object down, changing clothes from one parent to another
+    void transferObjectParent(GameObject clothing, GameObject collider)
+    {
+        //Put clothes in same position as placement hitbox
+        clothesObject.transform.position = collider.transform.position;
+        //Set clothes collider to true, to be able to intereact with them again
+        clothesObject.GetComponent<BoxCollider>().enabled = true;
+        //Transfer clothes from player parent to placement parent
+        clothesObject.transform.SetParent(collider.transform);
+        //Remove clohtes from list of objects player is carrying 
+        clothesCarrying.Remove(clothesObject);
     }
 }
