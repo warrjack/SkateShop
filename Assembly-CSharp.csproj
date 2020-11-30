@@ -58,8 +58,9 @@
     <Compile Include="Assets\Scripts\PlacementHandler.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Player1Controller.cs" />
-    <Compile Include="Assets\Scripts\InteractionBox.cs" />
     <Compile Include="Assets\Scripts\CustomerAI.cs" />
+    <Compile Include="Assets\Scripts\InteractionBox.cs" />
+    <Compile Include="Assets\Scripts\SetupScene.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

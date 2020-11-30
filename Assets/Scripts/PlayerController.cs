@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
 
         //If any movement button is pressed, character will rotate towards movement direction, otherwise won't move
         //if(Input.GetKey(KeyCode.W) | Input.GetKey(KeyCode.A) | Input.GetKey(KeyCode.S) | Input.GetKey(KeyCode.D))
-        if (moveDirection.x != 0 | moveDirection.y != 0)
+        if (moveDirection.x != 0 | moveDirection.z != 0)
         {
             //Rotate character from current rotation to movement direction at playerRotationSpeed rate
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveDirection), playerRotationSpeed);
