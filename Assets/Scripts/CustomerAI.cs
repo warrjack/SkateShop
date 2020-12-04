@@ -12,24 +12,30 @@ public class CustomerAI : MonoBehaviour
     private bool isMoving = false;      //Check if currently moving or just finished moving towards point
 
     private List<Vector3> exitPoints = new List<Vector3>();             //Points declaring customer leaving scene
-    private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
     public List<GameObject> tableList = new List<GameObject>();         //List of parents of clothing object points
     private List<GameObject> clothePoints = new List<GameObject>();     //List of clothing objects to determin next position
     private GameObject currentClothing;                                 //Current Clothing position destination is set to
+    private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
+    private float stackSpacer = 0.2f;                   //Space between stacked clothes
+    private Vector3 clothesCarryingPosition = new Vector3(0f, 0f, 1f);    //Position clothes start when being stacked
+    private GameObject clothesGrabbing;
+    private bool canGrab = true;
+    private float initialStackSpacer = 0.66f;
 
     public Mesh messUpMesh;     //Mesh for messy clothing
     public Mesh brokenMesh;     //Mesh for broken clothing
 
-    private int randomInt = 0;                  //Random number generated for chances of customer choosing something
-    private float stayInStoreChance = 0f;       //Chance % staying in the store
-    private float pickUpChance = 0f;            //Chance % in choosing picking up clothes
-    private float messUpChance = 0f;            //Chance % in choosing messing up clothes
-    private float damageChance = 0f;            //Chance % in choosing damaging clothes
-    private float checkOutChance = 0f;          //Chance % in choosing checking out clothes
+    public int randomInt = 0;                  //Random number generated for chances of customer choosing something
+    public float stayInStoreChance = 0f;       //Chance % staying in the store
+    public float pickUpChance = 0f;            //Chance % in choosing picking up clothes
+    public float messUpChance = 0f;            //Chance % in choosing messing up clothes
+    public float damageChance = 0f;            //Chance % in choosing damaging clothes
+    public float checkOutChance = 0f;          //Chance % in choosing checking out clothes
 
     private Vector3 beforePosition = Vector3.zero;  //Check position for before being stuck
     private Vector3 afterPosition = Vector3.zero;   //Check position for after being stuck
     private float rangePosition = 0.3f;             //Range of leeway position can be the same to be considered stuck
+
     // Start is called before the first frame update
     void Start()
     {
@@ -66,10 +72,9 @@ public class CustomerAI : MonoBehaviour
             if(isMoving)
             {
                 //Delay before setting next move/destination
+                isMoving = false;
                 StartCoroutine(DelayBeforeNextMove());
             }
-            //Character no longer moving
-            isMoving = false;
             //Set looking position y to eye level
             destinationCache.y = transform.position.y;
             //Get rotation based on character position
@@ -88,7 +93,6 @@ public class CustomerAI : MonoBehaviour
         //Rotation for when agent is moving
         if (isMoving)
         {
-
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(agent.velocity.normalized), 1000f * Time.deltaTime);
         }
         //Rotation for when looking at clothing
@@ -187,20 +191,47 @@ public class CustomerAI : MonoBehaviour
             //If already chosen next position
             if(currentClothing != null)
             {
-                //Decide if applying mess mesh or broken mesh
+                //Deciding factor
                 randomInt = Random.Range(0, 100);
-                if (randomInt < 50)
+
+                //If staying in store
+                if (randomGenerator(stayInStoreChance))
                 {
-                    currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
+                    stayInStoreChance += 2f;
+                    //If clothes are in placement position
+                    if (currentClothing.transform.childCount > 0)
+                    {
+                        clothesGrabbing = currentClothing.transform.GetChild(0).gameObject;
+                        if (randomInt < 33)
+                        {
+                            currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
+                        }
+                        else if (randomInt > 33 && randomInt < 66 && canGrab)
+                        {
+                            //Set clothes object to child of character to be carried around
+                            clothesGrabbing.transform.SetParent(transform);
+                            //Set clothes carrying position to be ontop of hands
+                            clothesCarryingPosition.y = initialStackSpacer + stackSpacer * clothesCarrying.Count;
+                            clothesGrabbing.transform.localPosition = clothesCarryingPosition;
+                            //Turn off collider to interact with other elements while carrying clothes
+                            clothesGrabbing.GetComponent<BoxCollider>().enabled = false;
+                            //Add clothes object just picked up to list of objects currently carrying
+                            clothesCarrying.Add(clothesGrabbing);
+                            //canGrab = false;
+                        }
+                        else
+                        {
+                            currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
+                        }
+                    }
                 }
+                //If leaving store
                 else
                 {
-                    currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
+
                 }
+                
             }
-            //Pick new location
-            currentClothing = clothePoints[Random.Range(0, clothePoints.Count - 1)];
-            destination = currentClothing.transform.position;
 
         }
         //Stay in store
@@ -208,6 +239,9 @@ public class CustomerAI : MonoBehaviour
         //Damage clothes
         //Mess up clothes        
 
+        //Pick new location
+        currentClothing = clothePoints[Random.Range(0, clothePoints.Count - 1)];
+        destination = currentClothing.transform.position;
         //Save destination for after destination is overridden
         destinationCache = destination;
     }
@@ -230,7 +264,7 @@ public class CustomerAI : MonoBehaviour
         beforePosition = transform.position;
         yield return new WaitForSeconds(4.1f);
         afterPosition = transform.position;
-        //checkIfStuck();
+        checkIfStuck();
     }
 
     void checkIfStuck()
@@ -239,28 +273,18 @@ public class CustomerAI : MonoBehaviour
         {
             Debug.Log(gameObject.name + " claimed Stuck");
             setNextMove();
+            StartCoroutine(checkIfStuckDelay());
         }
         else if (beforePosition.y > afterPosition.y - rangePosition && beforePosition.y < afterPosition.y + rangePosition)
         {
             Debug.Log(gameObject.name + " claimed Stuck");
             setNextMove();
+            StartCoroutine(checkIfStuckDelay());
         }
         else
         {
             Debug.Log(gameObject.name + " claimed Not Stuck");
-        }
-
-       // StartCoroutine(checkIfStuckDelay());
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    { 
-        //If colliding with customer
-        if (collision.transform.name.Contains("Customer"))
-        {
-            Debug.Log("Change");
-            //Move away from customer
-            setNextMove();
+            StartCoroutine(checkIfStuckDelay());
         }
     }
 }
