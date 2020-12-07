@@ -5,32 +5,32 @@ using UnityEngine.AI;
 
 public class CustomerAI : MonoBehaviour
 {
-    private NavMeshAgent agent;     //NavMeshAgent component
-    public Vector3 destination;     //Next position to move to 
+    private NavMeshAgent agent;                         //NavMeshAgent component
+    public Vector3 destination;                         //Next position to move to 
     public Vector3 destinationCache = Vector3.zero;     //Save previous destination for rotation towards clothing before overridden
-    private Vector3 targetRotation;     //Target rotation character is rotating towards
-    private bool isMoving = false;      //Check if currently moving or just finished moving towards point
+    private Vector3 targetRotation;                     //Target rotation character is rotating towards
+    private bool isMoving = false;                      //Check if currently moving or just finished moving towards point
 
     private List<Vector3> exitPoints = new List<Vector3>();             //Points declaring customer leaving scene
     public List<GameObject> tableList = new List<GameObject>();         //List of parents of clothing object points
     private List<GameObject> clothePoints = new List<GameObject>();     //List of clothing objects to determin next position
     private GameObject currentClothing;                                 //Current Clothing position destination is set to
     private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
-    private float stackSpacer = 0.2f;                   //Space between stacked clothes
+    private float stackSpacer = 0.2f;                                   //Space between stacked clothes
     private Vector3 clothesCarryingPosition = new Vector3(0f, 0f, 1f);    //Position clothes start when being stacked
-    private GameObject clothesGrabbing;
-    private bool canGrab = true;
-    private float initialStackSpacer = 0.66f;
+    private GameObject clothesGrabbing;                 //The clothing object interacting with
+    private bool canGrab = true;                        //Check if reached pick-up cap
+    private float initialStackSpacer = 0.66f;           //Space between the clothes carrying and the ground (0, 0)
 
     public Mesh messUpMesh;     //Mesh for messy clothing
     public Mesh brokenMesh;     //Mesh for broken clothing
 
     public int randomInt = 0;                  //Random number generated for chances of customer choosing something
-    public float stayInStoreChance = 0f;       //Chance % staying in the store
-    public float pickUpChance = 0f;            //Chance % in choosing picking up clothes
-    public float messUpChance = 0f;            //Chance % in choosing messing up clothes
-    public float damageChance = 0f;            //Chance % in choosing damaging clothes
-    public float checkOutChance = 0f;          //Chance % in choosing checking out clothes
+    public float stayInStoreChance = 100f;       //Chance % staying in the store
+    public float pickUpChance = 30f;            //Chance % in choosing picking up clothes
+    public float messUpChance = 40f;            //Chance % in choosing messing up clothes
+    public float damageChance = 30f;            //Chance % in choosing damaging clothes
+    public float checkOutChance = 10f;          //Chance % in choosing checking out clothes
 
     private Vector3 beforePosition = Vector3.zero;  //Check position for before being stuck
     private Vector3 afterPosition = Vector3.zero;   //Check position for after being stuck
@@ -191,44 +191,57 @@ public class CustomerAI : MonoBehaviour
             //If already chosen next position
             if(currentClothing != null)
             {
-                //Deciding factor
-                randomInt = Random.Range(0, 100);
-
                 //If staying in store
                 if (randomGenerator(stayInStoreChance))
                 {
-                    stayInStoreChance += 2f;
+					stayInStoreChance -= 2f;
                     //If clothes are in placement position
                     if (currentClothing.transform.childCount > 0)
                     {
+                        //Save clothes object as reference instead of the placement object
                         clothesGrabbing = currentClothing.transform.GetChild(0).gameObject;
-                        if (randomInt < 33)
-                        {
-                            currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
-                        }
-                        else if (randomInt > 33 && randomInt < 66 && canGrab)
-                        {
-                            //Set clothes object to child of character to be carried around
-                            clothesGrabbing.transform.SetParent(transform);
-                            //Set clothes carrying position to be ontop of hands
-                            clothesCarryingPosition.y = initialStackSpacer + stackSpacer * clothesCarrying.Count;
-                            clothesGrabbing.transform.localPosition = clothesCarryingPosition;
-                            //Turn off collider to interact with other elements while carrying clothes
-                            clothesGrabbing.GetComponent<BoxCollider>().enabled = false;
-                            //Add clothes object just picked up to list of objects currently carrying
-                            clothesCarrying.Add(clothesGrabbing);
-                            //canGrab = false;
-                        }
-                        else
-                        {
-                            currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
-                        }
+
+
+                        //Pick up clothes from table
+                        if(randomGenerator(pickUpChance))
+						{
+
+							pickUpChance -= 2f;
+							//Set clothes object to child of character to be carried around
+							clothesGrabbing.transform.SetParent(transform);
+							//Set clothes carrying position to be ontop of hands
+							clothesCarryingPosition.y = initialStackSpacer + stackSpacer * clothesCarrying.Count;
+							clothesGrabbing.transform.localPosition = clothesCarryingPosition;
+							//Turn off collider to interact with other elements while carrying clothes
+							clothesGrabbing.GetComponent<BoxCollider>().enabled = false;
+							//Add clothes object just picked up to list of objects currently carrying
+							clothesCarrying.Add(clothesGrabbing);
+							canGrab = false;
+						}
+                        //If not picking up clothes from table
+						else
+						{
+                            //Mess up clothes on table
+                            if(randomGenerator(messUpChance))
+							{
+								messUpChance += 2f;
+								currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
+							}
+
+                            //Damage clothes on table
+							else if(randomGenerator(damageChance))
+							{
+								damangeChance += 2f;s
+								currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
+							}
+
+                            //Does nothing otherwise
                     }
                 }
                 //If leaving store
                 else
                 {
-
+                    
                 }
                 
             }
