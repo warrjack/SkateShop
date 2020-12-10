@@ -178,7 +178,6 @@ public class CustomerAI : MonoBehaviour
                 //Pick up clothes from table
                 if (randomGenerator(pickUpChance))
                 {
-
 					changeChances(pickUpChance);
 					//Set clothes object to child of character to be carried around
 					clothesGrabbing.transform.SetParent(transform);
