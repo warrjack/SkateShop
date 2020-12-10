@@ -281,9 +281,6 @@ public class CustomerAI : MonoBehaviour
             //Save destination for after destination is overridden
             destinationCache = destination;
         }
-
-        
-
     }
     //Create a random boolean depending on the chance of the randomly generated int being bigger than the chance of the instance happening
     bool randomGenerator(float chance)
