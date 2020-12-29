@@ -272,9 +272,7 @@ public class CustomerAI : MonoBehaviour
                     {
 
                     }
-
                 }
-
             }
             //Stay in store
             //Pick up clothes
@@ -294,46 +292,45 @@ public class CustomerAI : MonoBehaviour
         randomInt = Random.Range(0, 100);
         if (chance < randomInt)
         {
-            Debug.Log(chance + ", true");
             return true;
         }
         else
         {
-
-            Debug.Log(chance + ", false");
             return false;
         }
     }
 
+    //Adjust chances of customer doing activities
     void changeChances(string choice)
 	{
+        //Pass choice to adjust, and add value to specific activity
 		switch (choice)
         {
             case "stayInStoreChance":
-                chances[0] += 10f;
+                chances[0] -= 10f;
                 break;
-            case "pickUpChoice":
-                chances[1] += 10f;
+            case "pickUpChance":
+                chances[1] -= 10f;
                 break;
             case "messUpChance":
-                chances[2] += 10f;
+                chances[2] -= 10f;
                 break;
             case "damageChance":
-                chances[3] += 10f;
+                chances[3] -= 10f;
                 break;
             case "checkOutChance":
-                chances[4] += 10f;
+                chances[4] -= 10f;
                 break;
             default:
                 Debug.Log("Invalid choice in chanceChances!");
                 break;
         }
 
+        //Increase chance of other activities happening
 		for (int i = 0; i < chances.Count; i++)
 		{
-			chances[i] -= 5f;
+			chances[i] += 5f;
 		}
-        Debug.Log("Chanes: " + chances);
 	}
 
 

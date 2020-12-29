@@ -6485,6 +6485,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cadb4f1239ca7749a237c6c1d36e6bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  foldedMesh: {fileID: 3055935343536399197, guid: 22f04d05b9c7f3146b2c8e86ce970eba,
+    type: 3}
 --- !u!1 &1971274540
 GameObject:
   m_ObjectHideFlags: 0
@@ -7292,6 +7294,18 @@ PrefabInstance:
       propertyPath: tableList.Array.data[3]
       value: 
       objectReference: {fileID: 1924280871}
+    - target: {fileID: 3986946225712113486, guid: dc1278f2862fd864cb8adc4bf922a730,
+        type: 3}
+      propertyPath: messUpMesh
+      value: 
+      objectReference: {fileID: 1982727452471422909, guid: 5f477ccc78f6a3047861fae106f84f89,
+        type: 3}
+    - target: {fileID: 3986946225712113486, guid: dc1278f2862fd864cb8adc4bf922a730,
+        type: 3}
+      propertyPath: brokenMesh
+      value: 
+      objectReference: {fileID: -1538841461391033027, guid: 519cf1a9831e24d409b9b895c0e1a4b6,
+        type: 3}
     - target: {fileID: 3986946225712113487, guid: dc1278f2862fd864cb8adc4bf922a730,
         type: 3}
       propertyPath: m_Name

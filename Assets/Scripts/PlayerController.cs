@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
     private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
     private float stackSpacer = 0.2f;                   //Space between stacked clothes
     private Vector3 clothesCarryingPosition = new Vector3(0f, 0f, 0.8f);    //Position clothes start when being stacked
+    public Mesh foldedMesh;
 
     private bool inputInUse = false;                    //Get controller input on down instance
 
@@ -49,7 +50,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveDirection), playerRotationSpeed);
         }
 
-        //Interact Button
+        //Pick up item button
         if (Input.GetAxisRaw("Pick Up") != 0 && !inputInUse)
         {
             inputInUse = true;
@@ -69,7 +70,7 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-
+        //Drop item button
         else if (Input.GetAxisRaw("Put Down") != 0 && !inputInUse)
         {
             inputInUse = true;
@@ -89,6 +90,42 @@ public class PlayerController : MonoBehaviour
                     }
                 }
             }
+        }
+
+        //Fold or Undamage product
+        else if (Input.GetAxisRaw("Interact") != 0 && clothesCarrying.Count == 0 && !inputInUse)
+        {
+            inputInUse = true;
+            //Cast ray from player center forward relative to player
+            ray = new Ray(transform.position, transform.forward);
+            //if ray hits point
+            if (Physics.Raycast(ray, out rayHit))
+            {
+                Debug.DrawLine(ray.origin, rayHit.point, Color.blue);
+                //Check if rayHit point is close enough to interact with
+                if (rayHit.distance <= 1.1f)
+                {
+                    //Check if interacting with clothing
+                    if (rayHit.collider.gameObject.name.Contains("Clothe"))
+                    {
+                        //If the product is unfolded and in folding station
+                        if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Unfolded"))
+                        {
+                            rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh = foldedMesh;
+                        }
+                        //If the product is damaged and in repair station
+                        else if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Damaged"))
+                        {
+                            rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh = foldedMesh;
+                        }
+                        else
+                        {
+                            Debug.Log(rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name);
+                        }
+                    }
+                }
+            }
+
         }
 
         //Reset input use so buttons can be pressed again
