@@ -55,12 +55,12 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\PlacementHandler.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
-    <Compile Include="Assets\Scripts\Player1Controller.cs" />
+    <Compile Include="Assets\Scripts\SetupScene.cs" />
+    <Compile Include="Assets\Scripts\ProgressBar.cs" />
     <Compile Include="Assets\Scripts\CustomerAI.cs" />
     <Compile Include="Assets\Scripts\InteractionBox.cs" />
-    <Compile Include="Assets\Scripts\SetupScene.cs" />
+    <Compile Include="Assets\Scripts\RegisterController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

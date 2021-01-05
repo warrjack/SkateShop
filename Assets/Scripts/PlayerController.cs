@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -12,9 +13,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 moveDirection = Vector3.zero;       //Set next character position
     private Ray ray;                                    //Ray to detect what's in front
     private RaycastHit rayHit;                          //The point the ray cast hits
-
-    private string inRageOf = "";                       //What can interact with ("", Register, Folding, Placing)
-
+    
     private GameObject clothesObject;                   //Clothes object interacting with
 
     private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
@@ -24,13 +23,26 @@ public class PlayerController : MonoBehaviour
 
     private bool inputInUse = false;                    //Get controller input on down instance
 
+    public Slider slider;                               //Repair or Folding progress bar
+    public Image fill;
+    private ProgressBar progressBarClass;               //Progress bar script
+    private Vector3 screenToWorldSliderPos = Vector3.zero;  //Get screen position in 3D world space
+    private bool incrementFoldingBar = false;           //Check if holding down space to enable slider progression
+
+    private bool usingRegister = false;
+
+    private List<GameObject> customerLineUpFromRegister = new List<GameObject>();
+    private int numberClothesScanning = 0;
+    private RegisterController registerInUse;
+
 
     // Start is called before the first frame update
     void Start()
     {
         //Initialize
         characterController = GetComponent<CharacterController>();      //Get self Character Controller component
-
+        progressBarClass = slider.GetComponent<ProgressBar>();          //Get Slider Porgress Bar Script component
+        slider.gameObject.SetActive(false);                             //Hide Slider
     }
 
     // Update is called once per frame
@@ -50,7 +62,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveDirection), playerRotationSpeed);
         }
 
-        //Pick up item button
+        //Pick up item ([E] or X)
         if (Input.GetAxisRaw("Pick Up") != 0 && !inputInUse)
         {
             inputInUse = true;
@@ -70,7 +82,7 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-        //Drop item button
+        //Drop item ([Q] or O)
         else if (Input.GetAxisRaw("Put Down") != 0 && !inputInUse)
         {
             inputInUse = true;
@@ -92,7 +104,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        //Fold or Undamage product
+        //Fold or Undamage product ([Space] or Square)
         else if (Input.GetAxisRaw("Interact") != 0 && clothesCarrying.Count == 0 && !inputInUse)
         {
             inputInUse = true;
@@ -109,18 +121,33 @@ public class PlayerController : MonoBehaviour
                     if (rayHit.collider.gameObject.name.Contains("Clothe"))
                     {
                         //If the product is unfolded and in folding station
-                        if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Unfolded"))
+                        if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Unfolded") && rayHit.collider.transform.parent.name.Contains("FoldingStation"))
                         {
-                            rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh = foldedMesh;
+
+                            EnableSlider();
                         }
                         //If the product is damaged and in repair station
-                        else if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Damaged"))
+                        else if (rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name.Contains("Damaged") && rayHit.collider.transform.parent.name.Contains("RepairStation"))
                         {
-                            rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh = foldedMesh;
+
+                            EnableSlider();
                         }
                         else
                         {
+                            //Not sure what we're interacting with...
                             Debug.Log(rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh.name);
+                        }
+                    }
+               
+                    else if (rayHit.collider.gameObject.name.Contains("Register"))
+                    {
+                        customerLineUpFromRegister = rayHit.collider.gameObject.GetComponent<RegisterController>().customerLineUp;
+                        if (customerLineUpFromRegister.Count > 0)
+                        {
+                            usingRegister = true;
+                            registerInUse = rayHit.collider.gameObject.GetComponent<RegisterController>();
+                            numberClothesScanning = customerLineUpFromRegister[0].GetComponent<CustomerAI>().clothesCarrying.Count;
+                            EnableSlider();
                         }
                     }
                 }
@@ -134,7 +161,67 @@ public class PlayerController : MonoBehaviour
             inputInUse = false;
         }
 
-        //Check if sprinting
+
+        //Enable Slider
+        void EnableSlider()
+        {
+            //Is pressing Interact button down
+            incrementFoldingBar = true;
+            //Get screen position of player
+            screenToWorldSliderPos = Camera.main.WorldToScreenPoint(this.transform.position);
+            //Set slider position 40 units above player
+            screenToWorldSliderPos.y += 40f;
+            //Move slider to new Position
+            slider.transform.position = screenToWorldSliderPos;
+        }
+        //If Interact button is down and is interacting with something
+        
+        if (incrementFoldingBar)
+        {
+            //Show slider
+            slider.gameObject.SetActive(true);
+            if (usingRegister)
+            {
+                progressBarClass.IncrementProgress(0.1f/numberClothesScanning);
+                fill.color = new Color(204, 144, 40, 255);
+            }
+            //Increment Slider using connected class at 0.10f units/frame
+            else
+            {
+                fill.color = new Color(40, 204, 179, 255);
+                progressBarClass.IncrementProgress(0.1f);
+            }
+            //If slider is full
+            if (slider.value >= 1)
+            {
+
+                if(usingRegister)
+                {
+                    registerInUse.LeaveLineUp();
+                    registerInUse.shiftLineUp();
+                }
+                else
+                {
+                    //Fold/Repair clothing interacting with
+                    rayHit.collider.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().mesh = foldedMesh;
+                }
+                //Hide Slider
+                incrementFoldingBar = false;
+            }
+        }
+
+        //If Interact button is up
+        if (Input.GetAxisRaw("Interact") == 0 | incrementFoldingBar == false | inputInUse)
+        {
+            //No longer holding down
+            incrementFoldingBar = false;
+            //Set Slider to 0
+            progressBarClass.ResetProgress();
+            //Hide slider
+            slider.gameObject.SetActive(false);
+        }
+
+        //Check if sprinting ([LShift] or R2)
         if (Input.GetAxisRaw("Speed Up") != 0)
         {
             //Sprint speed
@@ -180,7 +267,7 @@ public class PlayerController : MonoBehaviour
         }
 
         //If placing object down at folding station
-        else if (collider.name.Contains("FoldingStation"))
+        else if (collider.name.Contains("FoldingStation") | collider.name.Contains("RepairStation"))
         {
             //Recognize most recent clothes object
             clothesObject = clothesCarrying[clothesCarrying.Count - 1];
@@ -201,3 +288,4 @@ public class PlayerController : MonoBehaviour
         clothesCarrying.Remove(clothesObject);
     }
 }
+

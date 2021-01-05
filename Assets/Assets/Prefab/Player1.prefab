@@ -310,6 +310,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: lowerSkater
       objectReference: {fileID: 0}
+    - target: {fileID: -927199367670048503, guid: ee6cb3c561dc817449cdd5047bd74a26,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -113181020801827196, guid: ee6cb3c561dc817449cdd5047bd74a26,
         type: 3}
       propertyPath: m_Materials.Array.data[0]

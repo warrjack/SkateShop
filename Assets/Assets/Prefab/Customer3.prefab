@@ -43,7 +43,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 5044710149992628235}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.6
+  m_Radius: 0.4
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -55,7 +55,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 1
 --- !u!114 &5044710149992628234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,14 +70,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   destination: {x: 0, y: 0, z: 0}
   destinationCache: {x: 0, y: 0, z: 0}
+  exitPoints: []
+  registerObjects: []
   tableList:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  messUpMesh: {fileID: -5495902117074765545, guid: 5f477ccc78f6a3047861fae106f84f89,
+  messUpMesh: {fileID: 1982727452471422909, guid: 5f477ccc78f6a3047861fae106f84f89,
     type: 3}
-  brokenMesh: {fileID: -5495902117074765545, guid: 519cf1a9831e24d409b9b895c0e1a4b6,
+  brokenMesh: {fileID: -1538841461391033027, guid: 519cf1a9831e24d409b9b895c0e1a4b6,
     type: 3}
+  randomInt: 0
 --- !u!136 &6092431381817668892
 CapsuleCollider:
   m_ObjectHideFlags: 0

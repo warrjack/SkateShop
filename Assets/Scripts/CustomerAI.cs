@@ -11,11 +11,14 @@ public class CustomerAI : MonoBehaviour
     private Vector3 targetRotation;                     //Target rotation character is rotating towards
     private bool isMoving = false;                      //Check if currently moving or just finished moving towards point
 
-    private List<Vector3> exitPoints = new List<Vector3>();             //Points declaring customer leaving scene
+    public List<GameObject> registerObjects = new List<GameObject>();         //Points to declare buying items
+    private bool isCheckingOut = false;
+    private GameObject registerUsing;
+
     public List<GameObject> tableList = new List<GameObject>();         //List of parents of clothing object points
     private List<GameObject> clothePoints = new List<GameObject>();     //List of clothing objects to determin next position
     private GameObject currentClothing;                                 //Current Clothing position destination is set to
-    private List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
+    public List<GameObject> clothesCarrying = new List<GameObject>();  //Clothes currently carrying
     private float stackSpacer = 0.2f;                                   //Space between stacked clothes
     private Vector3 clothesCarryingPosition = new Vector3(0f, 0f, 1f);    //Position clothes start when being stacked
     private GameObject clothesGrabbing;                 //The clothing object interacting with
@@ -26,14 +29,11 @@ public class CustomerAI : MonoBehaviour
     public Mesh brokenMesh;     //Mesh for broken clothing
 
     public int randomInt = 0;                  //Random number generated for chances of customer choosing something
-    private float stayInStoreChance = 0f;       //Chance % staying in the store
-    private float pickUpChance = 30f;            //Chance % in choosing picking up clothes
-    private float messUpChance = 40f;            //Chance % in choosing messing up clothes
-    private float damageChance = 30f;            //Chance % in choosing damaging clothes
-    private float checkOutChance = 10f;          //Chance % in choosing checking out clothes
-
-    private List<float> chances = new List<float>();
-	private int chanceInt = 0;
+    private float stayInStoreChance = 100f;       //Chance % staying in the store
+    private float pickUpChance = 50f;            //Chance % in choosing picking up clothes
+    private float messUpChance = 70f;            //Chance % in choosing messing up clothes
+    private float damageChance = 35f;            //Chance % in choosing damaging clothes
+    private float checkOutChance = 15f;          //Chance % in choosing checking out clothes
 
     private Vector3 beforePosition = Vector3.zero;  //Check position for before being stuck
     private Vector3 afterPosition = Vector3.zero;   //Check position for after being stuck
@@ -47,20 +47,14 @@ public class CustomerAI : MonoBehaviour
 
         //Set current destination to starting point
         destination = transform.position;
-        //Add exit points to exitPoints array
-        exitPoints.Add(new Vector3(-5f, 0.75f, 9.31f));
-        exitPoints.Add(new Vector3(5f, 0.75f, 9.31f));
 
         //Get all clothing placement points
         findAllClothingLocations();
         setNextMove();
 		agent.updateRotation = false;
         //StartCoroutine(checkIfStuckDelay());
-        chances.Add(stayInStoreChance);
-        chances.Add(pickUpChance);
-        chances.Add(messUpChance);
-        chances.Add(damageChance);
-        chances.Add(checkOutChance);
+
+        Debug.Log("Chances (init): " + stayInStoreChance + ", " + pickUpChance + ", " + messUpChance + ", " + damageChance + ", " + checkOutChance);
     }
 
     // Update is called once per frame
@@ -106,7 +100,15 @@ public class CustomerAI : MonoBehaviour
         //Rotation for when looking at clothing
         else
         {
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetRotation), 500f * Time.deltaTime);
+            if (isCheckingOut)
+            {
+                transform.LookAt(registerUsing.transform.position);
+            }
+            else
+            {
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(targetRotation), 500f * Time.deltaTime);
+
+            }
         }
     }
 
@@ -153,7 +155,10 @@ public class CustomerAI : MonoBehaviour
     IEnumerator DelayBeforeNextMove()
     {
         yield return new WaitForSeconds(2);
-        setNextMove();
+        if(!isCheckingOut)
+        {
+            setNextMove();
+        }
 
     }
 
@@ -174,11 +179,11 @@ public class CustomerAI : MonoBehaviour
 
 
                 //Pick up clothes from table
-                if (randomGenerator(pickUpChance))
+                if (randomGenerator(pickUpChance) && canGrab)
                 {
-					changeChances("pickUpChance");
-					//Set clothes object to child of character to be carried around
-					clothesGrabbing.transform.SetParent(transform);
+                    changeChances("pickUpChance");
+                    //Set clothes object to child of character to be carried around
+                    clothesGrabbing.transform.SetParent(transform);
                     //Set clothes carrying position to be ontop of hands
                     clothesCarryingPosition.y = initialStackSpacer + stackSpacer * clothesCarrying.Count;
                     clothesGrabbing.transform.localPosition = clothesCarryingPosition;
@@ -186,33 +191,39 @@ public class CustomerAI : MonoBehaviour
                     clothesGrabbing.GetComponent<BoxCollider>().enabled = false;
                     //Add clothes object just picked up to list of objects currently carrying
                     clothesCarrying.Add(clothesGrabbing);
-                    canGrab = false;
+                    if (clothesCarrying.Count > 2)
+                    {
+                        canGrab = false;
+                    }
                 }
                 //If not picking up clothes from table
                 else
                 {
                     //Mess up clothes on table
                     if (randomGenerator(messUpChance))
-					{
-						changeChances("messUpChance");
-						currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
+                    {
+                        changeChances("messUpChance");
+                        currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
                     }
 
                     //Damage clothes on table
                     else if (randomGenerator(damageChance))
-					{
-						changeChances("damageChance");
-						currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
+                    {
+                        changeChances("damageChance");
+                        currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
                     }
 
                     //Does nothing otherwise
+                    else if (randomGenerator(checkOutChance))
+                    {
+                        changeChances("checkOutChance");
+                        //Start check out procedure
+                        isCheckingOut = true;
+
+                    }
                 }
             }
-            //Pick new location
-            currentClothing = clothePoints[Random.Range(0, clothePoints.Count - 1)];
-            destination = currentClothing.transform.position;
-            //Save destination for after destination is overridden
-            destinationCache = destination;
+
         }
 
         //If not carrying anything
@@ -224,7 +235,7 @@ public class CustomerAI : MonoBehaviour
                 //If staying in store
                 if (randomGenerator(stayInStoreChance))
                 {
-					changeChances("stayInStoreChance");
+                    //changeChances("stayInStoreChance");
                     //If clothes are in placement position
                     if (currentClothing.transform.childCount > 0)
                     {
@@ -235,9 +246,9 @@ public class CustomerAI : MonoBehaviour
                         //Pick up clothes from table
                         if (randomGenerator(pickUpChance))
                         {
-							changeChances("pickUpChance");
-							//Set clothes object to child of character to be carried around
-							clothesGrabbing.transform.SetParent(transform);
+                            changeChances("pickUpChance");
+                            //Set clothes object to child of character to be carried around
+                            clothesGrabbing.transform.SetParent(transform);
                             //Set clothes carrying position to be ontop of hands
                             clothesCarryingPosition.y = initialStackSpacer + stackSpacer * clothesCarrying.Count;
                             clothesGrabbing.transform.localPosition = clothesCarryingPosition;
@@ -252,16 +263,16 @@ public class CustomerAI : MonoBehaviour
                         {
                             //Mess up clothes on table
                             if (randomGenerator(messUpChance))
-							{
-								changeChances("messUpChance");
-								currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
+                            {
+                                changeChances("messUpChance");
+                                currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = messUpMesh;
                             }
 
                             //Damage clothes on table
                             else if (randomGenerator(damageChance))
-							{
-								changeChances("damageChance");
-								currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
+                            {
+                                changeChances("damageChance");
+                                currentClothing.transform.GetChild(0).GetChild(0).GetComponent<MeshFilter>().mesh = brokenMesh;
                             }
 
                             //Does nothing otherwise
@@ -278,19 +289,33 @@ public class CustomerAI : MonoBehaviour
             //Pick up clothes
             //Damage clothes
             //Mess up clothes        
+        }
 
+        //If customer chose to check out items
+        if (isCheckingOut)
+        {
+            registerUsing = registerObjects[Random.Range(0, 2)];
+            registerUsing.GetComponent<RegisterController>().AddToLineUp(gameObject);
+            destinationCache = destination;
+
+            Debug.Log("Register(" + gameObject.name + "): " + registerUsing.name);
+        }
+
+        else
+        {
             //Pick new location
             currentClothing = clothePoints[Random.Range(0, clothePoints.Count - 1)];
             destination = currentClothing.transform.position;
             //Save destination for after destination is overridden
             destinationCache = destination;
         }
+
     }
     //Create a random boolean depending on the chance of the randomly generated int being bigger than the chance of the instance happening
     bool randomGenerator(float chance)
     {
         randomInt = Random.Range(0, 100);
-        if (chance < randomInt)
+        if (chance > randomInt)
         {
             return true;
         }
@@ -303,35 +328,39 @@ public class CustomerAI : MonoBehaviour
     //Adjust chances of customer doing activities
     void changeChances(string choice)
 	{
+        Debug.Log(choice);
+        float drop = 12f;
         //Pass choice to adjust, and add value to specific activity
 		switch (choice)
         {
             case "stayInStoreChance":
-                chances[0] -= 10f;
+                stayInStoreChance -= drop;
                 break;
             case "pickUpChance":
-                chances[1] -= 10f;
+                pickUpChance -= drop;
                 break;
             case "messUpChance":
-                chances[2] -= 10f;
+                messUpChance -= drop;
                 break;
             case "damageChance":
-                chances[3] -= 10f;
+                damageChance -= drop;
                 break;
             case "checkOutChance":
-                chances[4] -= 10f;
+                checkOutChance -= drop;
                 break;
             default:
                 Debug.Log("Invalid choice in chanceChances!");
                 break;
         }
-
         //Increase chance of other activities happening
-		for (int i = 0; i < chances.Count; i++)
-		{
-			chances[i] += 5f;
-		}
-	}
+        stayInStoreChance += drop / 2;
+        pickUpChance += drop / 2;
+        messUpChance += drop / 2;
+        damageChance += drop / 2;
+        checkOutChance += drop / 2;
+
+        Debug.Log("Chances (init): " + stayInStoreChance + ", " + pickUpChance + ", " + messUpChance + ", " + damageChance + ", " + checkOutChance);
+    }
 
 
 
