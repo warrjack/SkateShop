@@ -1,6 +1,6 @@
 # SkateShop
 
-SkateShop - Work in progress. A game I developed in request where you run a retail store by folding clothes and processing transactions while trying to skateboard without the manager noticing.
+SkateShop - Work in progress. A game I developed in request where you run a retail skateboard store by folding clothes and processing transactions while trying to organize product and keep customers satisfied.
 
 | [:sparkles: Getting Started](#getting-started) | [:rocket: Download](#download) | [:camera: Screenshots](#screenshots) |
 | --------------- | -------- | ----------- |
